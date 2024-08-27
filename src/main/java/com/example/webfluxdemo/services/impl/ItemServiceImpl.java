@@ -36,7 +36,7 @@ public class ItemServiceImpl implements ItemService {
     public Mono<Item> updateItem(Long id, Item item) {
         return itemRepository.findById(id)
                 .flatMap(existingItem -> {
-                    existingItem.setName(item.getName()); // Update other fields as needed
+                    existingItem.setName(item.getName());
                     return itemRepository.save(existingItem);
                 })
                 .switchIfEmpty(Mono.error(new ItemNotFoundException(id)));
@@ -46,6 +46,6 @@ public class ItemServiceImpl implements ItemService {
     public Mono<Void> deleteItem(Long id) {
         return itemRepository.findById(id)
                 .flatMap(item -> itemRepository.delete(item)
-                        .then(Mono.empty())); // Return Mono<Void> on success
+                        .then(Mono.empty()));
     }
 }
