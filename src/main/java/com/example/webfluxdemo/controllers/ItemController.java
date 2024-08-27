@@ -3,6 +3,7 @@ package com.example.webfluxdemo.controllers;
 import com.example.webfluxdemo.dto.ItemDTO;
 import com.example.webfluxdemo.models.Item;
 import com.example.webfluxdemo.repositories.ItemRepository;
+import com.example.webfluxdemo.services.ItemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,43 +13,36 @@ import reactor.core.publisher.Mono;
 @RestController
 @RequestMapping("/api/items")
 public class ItemController {
+
     @Autowired
-    private ItemRepository itemRepository;
+    private ItemService itemService;
 
     @GetMapping("/{id}")
     public Mono<Item> getItemById(@PathVariable Long id) {
-        return itemRepository.findById(id)
-                .switchIfEmpty(Mono.error(new ItemNotFoundException(id)));
+        return itemService.getItemById(id);
     }
 
     @GetMapping
     public Flux<Item> getAllItems() {
-        Flux<Item> allItems =  itemRepository.findAll();
-        allItems.subscribe(System.out::println);
-        return allItems;
+        return itemService.getAllItems();
     }
 
     @PostMapping
     public Mono<Item> createItem(@RequestBody Item item) {
-        return itemRepository.save(item);
+        return itemService.saveItem(item);
     }
 
     @PutMapping("/{id}")
     public Mono<Item> updateItem(@PathVariable Long id, @RequestBody Item item) {
-        return itemRepository.findById(id)
-                .flatMap(existingItem -> {
-                    existingItem.setName(item.getName());
-                    return itemRepository.save(existingItem);
-                })
-                .switchIfEmpty(Mono.error(new ItemNotFoundException(id)));
+        return itemService.updateItem(id, item);
     }
 
     @DeleteMapping("/{id}")
     public Mono<ResponseEntity<Object>> deleteItem(@PathVariable Long id) {
-        return itemRepository.findById(id)
-                .flatMap(item -> itemRepository.delete(item)
-                        .then(Mono.just(ResponseEntity.noContent().build())))
-                .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()));
+        return itemService.deleteItem(id)
+                .then(Mono.just(ResponseEntity.noContent().build()))
+                .defaultIfEmpty(Mono.just(ResponseEntity.notFound().build()).block());
     }
 }
+
 
